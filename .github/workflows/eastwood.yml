@@ -49,6 +49,7 @@ jobs:
       - name: json2edn eastwood
         run: |
           cd json2edn
+          clojure -Spath
           clojure -A:eastwood
 
 
@@ -92,4 +93,5 @@ jobs:
       - name: json2edn eastwood
         run: |
           cd json2edn
+          clojure -Spath
           clojure -A:eastwood

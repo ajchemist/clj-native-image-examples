@@ -1,0 +1,78 @@
+name: Build native-image in docker container
+
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+
+jobs:
+  build:
+    name: Build native-image with docker
+    runs-on: ubuntu-latest
+    container:
+      image: ajchemist/clojure-cli:graalvm-ce
+      volumes:
+        - /home/runner/.m2:/root/.m2
+        - /home/runner/.gitlibs:/root/.gitlibs
+    steps:
+      - name: Cache local maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/deps.edn') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+
+      - name: Cache gitlibs
+        uses: actions/cache@v2
+        with:
+          path: ~/.gitlibs
+          key: ${{ runner.os }}-gitlibs-${{ hashFiles('**/deps.edn') }}
+          restore-keys: |
+            ${{ runner.os }}-gitlibs-
+
+
+      - name: Configure build environment
+        run: |
+          gu install native-image
+
+
+      - uses: actions/checkout@v2
+
+
+      - name: Build native-image json2edn
+        run: |
+          cd json2edn
+          clojure -A:native-image
+
+
+      - name: Docker build json2edn
+        uses: docker/build-push-action@v1
+        with:
+          repository: ajchemist/clj-native-image-examples/json2edn
+          registry: docker.pkg.github.com
+          username: ${{ secrets.GH_PKG_DOCKER_USERNAME }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          path: json2edn
+          tags: latest
+          add_git_labels: true
+
+
+      - name: Upload json2edn native-image
+        uses: actions/upload-artifact@v2
+        with:
+          name: json2edn
+          path: json2edn
+
+
+  # docker-build:
+  #   runs-on: ubuntu-latest
+  #   needs: [ build ]
+
+
+  # test:
+  #   needs: ya-build
