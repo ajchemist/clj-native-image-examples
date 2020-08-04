@@ -1,0 +1,34 @@
+{:deps
+ {
+  org.clojure/data.json {:mvn/version "1.0.0"}
+  }
+
+
+ :aliases
+ {:native-image
+  {:extra-deps
+   {clj.native-image/clj.native-image
+    {:git/url "https://github.com/taylorwood/clj.native-image.git"
+     :sha     "34961b838e1875e72da5485fd5177aff8a0b2b1a"}}
+   :main-opts ["-m" "clj.native-image" "json2edn.core"
+               "--report-unsupported-elements-at-runtime"
+               "--initialize-at-build-time"
+               "-H:Name=json2edn"]
+   :jvm-opts  ["-Dclojure.compiler.direct-linking=true"]}
+
+
+  :outdated
+  {:extra-deps {olical/depot {:mvn/version "RELEASE"}}
+   :main-opts  ["-m" "depot.outdated.main"]}
+
+
+  :eastwood
+  {:extra-deps {jonase/eastwood {:mvn/version "RELEASE"}}
+   :main-opts  ["-m" "eastwood.lint" {:source-paths ["src"]}]}
+  }}
+
+
+;; Local Variables:
+;; cider-preferred-build-tool: clojure-cli
+;; compile-command: "clojure -A:native-image"
+;; End:
