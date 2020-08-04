@@ -1,4 +1,4 @@
-name: eastwood
+name: Build native-image
 
 
 on:
@@ -53,3 +53,23 @@ jobs:
         run: |
           cd json2edn
           clojure -A:native-image
+
+
+      - name: Upload json2edn native-image
+        uses: actions/upload-artifact@v2
+        with:
+          name: json2edn
+          path: json2edn
+
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download json2edn native-image for build
+        uses: actions/download-artifact@v2
+        with:
+          name: json2edn
+      - run: |
+          chmod +x ./json2edn
+          echo "{\"foo\": [{\"bar\": 1.33}]}" | ./json2edn
