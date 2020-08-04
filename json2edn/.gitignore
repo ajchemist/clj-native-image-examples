@@ -1,4 +1,5 @@
 .cpcache
 classes
 .nrepl-port
+.eastwood
 /json2edn
