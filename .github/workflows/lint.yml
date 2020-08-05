@@ -1,4 +1,4 @@
-name: eastwood
+name: Lint
 
 
 on:
@@ -9,7 +9,20 @@ on:
 
 
 jobs:
+  clj-kondo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: DeLaGuardo/clojure-lint-action@f712330e03eec4daa36da7045213190083aca4dd
+        with:
+          clj-kondo-args: --lint src # --config .clj-kondo/config.edn
+          # check-name is optional
+          check-name: This is a report name
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+
   eastwood__ubuntu-latest:
+    name: eastwood@ubuntu-latest
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -54,6 +67,7 @@ jobs:
 
 
   eastwood__macos-latest:
+    name: eastwood@macos-latest
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
