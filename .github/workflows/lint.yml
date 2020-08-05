@@ -13,12 +13,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: DeLaGuardo/clojure-lint-action@f712330e03eec4daa36da7045213190083aca4dd
+      # - uses: DeLaGuardo/clojure-lint-action@f712330e03eec4daa36da7045213190083aca4dd
+      #   with:
+      #     clj-kondo-args: --lint src # --config .clj-kondo/config.edn
+      #     # check-name is optional
+      #     check-name: This is a report name
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup clj-kondo
+        uses: DeLaGuardo/setup-clj-kondo@v1
         with:
-          clj-kondo-args: --lint src # --config .clj-kondo/config.edn
-          # check-name is optional
-          check-name: This is a report name
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          version: '2020.07.29'
+      - name: Lint
+        run: |
+          cd json2edn
+          clj-kondo --lint src
+          # --config .clj-kondo/config.edn
 
 
   eastwood__ubuntu-latest:

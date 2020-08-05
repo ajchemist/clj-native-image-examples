@@ -9,6 +9,27 @@ on:
 
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    needs: [ build ]
+    steps:
+      - name: Login docker.pkg.github.com
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${{ secrets.GH_PKG_DOCKER_USERNAME }} --password-stdin
+      - name: Running docker image json2edn
+        id: run
+        run: |
+          echo "{\"foo\": [{\"bar\": 1.33}]}" | docker run --rm -i docker.pkg.github.com/ajchemist/clj-native-image-examples/json2edn
+      - uses: 8398a7/action-slack@v3.5.0
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took # selectable (default: repo,message)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # optional
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
+        if: always() # Pick up events even if the job fails or is canceled.
+
+
   build:
     name: Build native-image with docker
     runs-on: ubuntu-latest
@@ -61,24 +82,3 @@ jobs:
           tags: latest
           tag_with_ref: true
           add_git_labels: true
-
-
-  test:
-    runs-on: ubuntu-latest
-    needs: [ build ]
-    steps:
-      - name: Login docker.pkg.github.com
-        run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${{ secrets.GH_PKG_DOCKER_USERNAME }} --password-stdin
-      - name: Running docker image json2edn
-        id: run
-        run: |
-          echo "{\"foo\": [{\"bar\": 1.33}]}" | docker run --rm -i docker.pkg.github.com/ajchemist/clj-native-image-examples/json2edn
-     - uses: 8398a7/action-slack@v3.5.0
-       with:
-         status: ${{ job.status }}
-         fields: repo,message,commit,author,action,eventName,ref,workflow,job,took # selectable (default: repo,message)
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # optional
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
-      if: always() # Pick up events even if the job fails or is canceled.
