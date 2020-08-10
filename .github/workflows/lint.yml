@@ -9,6 +9,21 @@ on:
 
 
 jobs:
+  secret-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: TEST secret
+        env:
+          SECRET_MESSAGE: ${{ secrets.TEST }}
+        run: |
+          echo $SECRET_MESSAGE | tr -d " "
+          if [[ $SECRET_MESSAGE == *"SECRET"* ]]; then
+          echo "It's there"
+          else
+          exit 1
+          fi
+
+
   clj-kondo:
     runs-on: ubuntu-latest
     steps:
