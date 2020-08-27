@@ -1,0 +1,86 @@
+name: Build native-image in docker container @ self-hosted
+
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+
+jobs:
+  test:
+    runs-on: [ self-hosted, linux ]
+    needs: [ build ]
+    steps:
+      - name: Login docker.pkg.github.com
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${{ secrets.GH_PKG_DOCKER_USERNAME }} --password-stdin
+      - name: Running docker image json2edn
+        id: run
+        run: |
+          echo "{\"foo\": [{\"bar\": 1.33}]}" | docker run --rm -i docker.pkg.github.com/ajchemist/clj-native-image-examples/json2edn
+      - uses: 8398a7/action-slack@v3.5.0
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took # selectable (default: repo,message)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # optional
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
+        if: always() # Pick up events even if the job fails or is canceled.
+
+
+  build:
+    name: Build native-image with docker
+    runs-on: [ self-hosted, linux ]
+    if: "!(contains(github.event.head_commit.message, 'ci skip') || contains(github.event.head_commit.message, 'skip ci'))"
+    container:
+      image: ajchemist/clojure-cli:graalvm-ce
+      volumes:
+        - /home/runner/.m2:/root/.m2
+        - /home/runner/.gitlibs:/root/.gitlibs
+    steps:
+      - name: Cache local maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/deps.edn') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+
+      - name: Cache gitlibs
+        uses: actions/cache@v2
+        with:
+          path: ~/.gitlibs
+          key: ${{ runner.os }}-gitlibs-${{ hashFiles('**/deps.edn') }}
+          restore-keys: |
+            ${{ runner.os }}-gitlibs-
+
+
+      - name: Configure build environment
+        run: |
+          gu install native-image
+
+
+      - uses: actions/checkout@v2
+
+
+      - name: Build native-image json2edn
+        run: |
+          cd json2edn
+          clojure -A:native-image
+
+
+      - name: Docker build json2edn
+        uses: docker/build-push-action@v1
+        with:
+          repository: ajchemist/clj-native-image-examples/json2edn
+          registry: docker.pkg.github.com
+          username: ${{ secrets.GH_PKG_DOCKER_USERNAME }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          path: json2edn
+          tags: latest
+          tag_with_ref: true
+          add_git_labels: true
+          # push: ${{ startsWith(github.ref, 'refs/tags/') }}
