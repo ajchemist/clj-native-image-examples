@@ -1,0 +1,47 @@
+{
+ :paths ["src"]
+ :deps
+ {
+  org.clojure/clojure     {:mvn/version "1.10.2-alpha1"}
+  ring/ring-core          {:mvn/version "1.8.2"}
+  ring/ring-jetty-adapter {:mvn/version "1.8.2"}
+  }
+ :aliases
+ {
+  :aot
+  {:jvm-opts ["-Dclojure.compiler.direct-linking=true"]}
+
+
+  :paths/classes
+  {:extra-paths ["classes"]}
+
+
+  :uberjar/paths
+  {:extra-paths ["classes"]}
+
+
+  :uberjar
+  {:extra-deps {uberdeps/uberdeps {:mvn/version "1.0.2"}}
+   :main-opts  ["-m" "uberdeps.uberjar"]}
+
+
+  :native-image-x
+  {:extra-deps
+   {clj.native-image/clj.native-image
+    {:git/url "https://github.com/ajchemist/clj.native-image.git"
+     :sha     "48a53b2b406363c38f359b3ff24b3953f9b3b59c"}}
+   :exec-fn   clj.native-image/build-x
+   :exec-args {:aliases [:paths/classes]
+               :main    "jetty.core"
+               :args    [
+                         "--report-unsupported-elements-at-runtime"
+                         "--no-fallback"
+                         "--initialize-at-build-time"
+                         "-H:+TraceClassInitialization"
+                         "-H:+ReportExceptionStackTraces"
+                         "--allow-incomplete-classpath"
+                         "-H:Name=jetty.bin"
+                         ]}
+   :jvm-opts ["-Dclj.native-image.log.level=info"]}
+  }
+ }
