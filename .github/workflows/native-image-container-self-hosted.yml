@@ -4,6 +4,8 @@ name: Build native-image in docker container @ self-hosted
 on:
   push:
     branches: [ master ]
+    branches-ignore:
+      - '**'
   pull_request:
     branches: [ master ]
 
