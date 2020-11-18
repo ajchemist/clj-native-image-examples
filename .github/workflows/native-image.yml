@@ -35,9 +35,9 @@ jobs:
 
 
       - name: Set up graalvm
-        uses: DeLaGuardo/setup-graalvm@3
+        uses: DeLaGuardo/setup-graalvm@master
         with:
-          graalvm-version: '20.1.0.java11'
+          graalvm-version: '20.3.0.java11'
 
 
       - name: Install native-image
@@ -45,15 +45,15 @@ jobs:
 
 
       - name: Set up clojure-cli
-        uses: DeLaGuardo/setup-clojure@2.0
+        uses: DeLaGuardo/setup-clojure@master
         with:
-          tools-deps: '1.10.1.561'
+          cli: '1.10.1.727'
 
 
       - name: json2edn native-image
         run: |
           cd json2edn
-          clojure -A:native-image
+          clojure -M:native-image
 
 
       - name: Upload json2edn native-image
